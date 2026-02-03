@@ -10,8 +10,11 @@ export const LogViewer: React.FC = () => {
         let retryTimeout: ReturnType<typeof setTimeout>;
 
         const connect = () => {
-            // Connect to production WebSocket
-            ws = new WebSocket('wss://google-maps-scrapping.onrender.com/ws/logs');
+            // Determine WebSocket URL dynamically
+            const baseUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8001`;
+            const wsProtocol = baseUrl.startsWith('https') ? 'wss' : 'ws';
+            const wsHost = baseUrl.replace(/^https?:\/\//, '');
+            ws = new WebSocket(`${wsProtocol}://${wsHost}/ws/logs`);
 
             ws.onopen = () => {
                 console.log('Connected to logs WebSocket');

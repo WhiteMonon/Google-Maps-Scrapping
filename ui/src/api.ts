@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = 'https://google-maps-scrapping.onrender.com/api';
+// Use environment variable if set, otherwise default to local backend
+const BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8001`;
+const API_URL = `${BASE_URL}/api`;
 
 export interface Lead {
     name: string;
