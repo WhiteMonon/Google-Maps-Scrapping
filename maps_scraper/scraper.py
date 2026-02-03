@@ -41,6 +41,40 @@ class GoogleMapsScraper:
             await self.playwright.stop()
         self.logger.info("Browser closed.")
 
+    async def handle_consent(self):
+        """Handle Google Consent dialog if it appears."""
+        try:
+            # Common selectors for consent dialog buttons
+            # "Accept all", "Agree", "I agree", etc.
+            consent_selectors = [
+                "button[aria-label='Accept all']",
+                "button:has-text('Accept all')",
+                "button:has-text('I agree')",
+                "form[action*='consent'] button"
+            ]
+            
+            for selector in consent_selectors:
+                if await self.page.locator(selector).count() > 0:
+                    self.logger.info(f"Consent dialog found. Clicking '{selector}'...")
+                    # Click and wait for navigation or disappearance
+                    try:
+                        await self.page.click(selector, timeout=3000)
+                        await self.page.wait_for_load_state("networkidle", timeout=5000)
+                        self.logger.info("Consent handle clicked.")
+                        return
+                    except Exception as e:
+                        self.logger.warning(f"Failed to click consent: {e}")
+            
+            # Check for "Before you continue" iframe or specific structure
+            if "consent.google.com" in self.page.url:
+                 self.logger.info("Redirected to consent page. Attempting to accept...")
+                 # Try keypress Enter as a fallback for accessibility focused dialogs
+                 await self.page.keyboard.press("Enter")
+                 await asyncio.sleep(2)
+
+        except Exception as e:
+            self.logger.warning(f"Error checking consent: {e}")
+
     async def search(self, keyword: str):
         """Navigate to Google Maps and search for the keyword."""
         if not self.page:
@@ -51,6 +85,9 @@ class GoogleMapsScraper:
         # Navigate to Google Maps
         await self.page.goto(f"https://www.google.com/maps/search/{keyword}")
         
+        # Handle potential consent popup
+        await self.handle_consent()
+        
         # Wait for either the feed (list results) or a single result (direct hit)
         # Using a broad wait first to ensure page load
         try:
@@ -58,6 +95,12 @@ class GoogleMapsScraper:
             await self.page.wait_for_selector("div[role='feed']", timeout=10000)
             self.logger.info("Results feed loaded.")
         except Exception as e:
+            # Take a screenshot for debugging cloud runs
+            try:
+                await self.page.screenshot(path="debug_feed_timeout.png")
+                self.logger.info("Saved debug screenshot to debug_feed_timeout.png")
+            except:
+                pass
             self.logger.warning(f"Results feed not found immediately for '{keyword}'. It might be a direct hit or no results. Error: {e}")
 
     async def scroll_results(self, limit: int):
