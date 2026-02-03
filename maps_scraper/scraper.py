@@ -89,38 +89,52 @@ class GoogleMapsScraper:
         await self.handle_consent()
         
         # Wait for either the feed (list results) or a single result (direct hit)
-        # Using a broad wait first to ensure page load
+        self.is_direct_hit = False
         try:
-            # wait for the results feed or main processing canvas
+            # Race condition: check if we are on a list (feed) or details (main)
+            # We wait for the feed primarily
             await self.page.wait_for_selector("div[role='feed']", timeout=10000)
             self.logger.info("Results feed loaded.")
-        except Exception as e:
-            # Take a screenshot for debugging cloud runs
+        except Exception:
+            # Check if it's a direct hit (single profile)
             try:
-                await self.page.screenshot(path="debug_feed_timeout.png")
-                self.logger.info("Saved debug screenshot to debug_feed_timeout.png")
-                
-                # Log page context
-                url = self.page.url
+                # Look for the main profile header or 'Directions' button which implies a detail view
+                if await self.page.locator("h1").count() > 0 and await self.page.locator("button[data-item-id='address']").count() > 0:
+                     self.logger.info("Single result found (Direct Hit).")
+                     self.is_direct_hit = True
+                else:
+                     raise Exception("Neither feed nor direct hit found.")
+            except Exception as e:
+                # Take a screenshot for debugging cloud runs
                 try:
-                    title = await self.page.title()
-                except:
-                    title = "Unknown"
-                
-                try:
-                    # Get first 200 chars of body text to see if it's a login/consent page
-                    body_text = await self.page.evaluate("document.body.innerText.substring(0, 200).replace(/\\n/g, ' ')")
-                except:
-                    body_text = "Could not retrieve body"
+                    await self.page.screenshot(path="debug_feed_timeout.png")
+                    self.logger.info("Saved debug screenshot to debug_feed_timeout.png")
                     
-                self.logger.info(f"debug_info: URL={url}, Title={title}, BodyStart={body_text}")
-                
-            except:
-                pass
-            self.logger.warning(f"Results feed not found immediately for '{keyword}'. It might be a direct hit or no results. Error: {e}")
+                    # Log page context
+                    url = self.page.url
+                    try:
+                        title = await self.page.title()
+                    except:
+                        title = "Unknown"
+                    
+                    try:
+                        # Get first 200 chars of body text to see if it's a login/consent page
+                        body_text = await self.page.evaluate("document.body.innerText.substring(0, 200).replace(/\\n/g, ' ')")
+                    except:
+                        body_text = "Could not retrieve body"
+                        
+                    self.logger.info(f"debug_info: URL={url}, Title={title}, BodyStart={body_text}")
+                    
+                except:
+                    pass
+                self.logger.warning(f"Results feed not found immediately for '{keyword}'. It might be a direct hit or no results. Error: {e}")
 
     async def scroll_results(self, limit: int):
         """Scroll the results feed to load more items."""
+        if self.is_direct_hit:
+            self.logger.info("Direct hit detected. Skipping scroll.")
+            return
+
         feed_selector = "div[role='feed']"
         try:
             # Ensure feed is loaded
@@ -181,6 +195,58 @@ class GoogleMapsScraper:
     async def extract_details(self, keyword: str, limit: int = 50, progress_callback=None) -> List[Lead]:
         """Extract details from loaded results up to the specified limit."""
         leads = []
+        
+        if self.is_direct_hit:
+            self.logger.info("Extracting data from single page (Direct Hit)...")
+            try:
+                # Extract Single Page Details
+                name = await extract_text(self.page.locator("h1").first)
+                
+                address = "N/A"
+                address_btn = self.page.locator("button[data-item-id='address']")
+                if await address_btn.count() > 0:
+                    aria = await address_btn.get_attribute("aria-label")
+                    if aria:
+                        address = aria.replace("Address: ", "").strip()
+                    else:
+                        text = await extract_text(address_btn)
+                        if text != "N/A":
+                             import re
+                             address = re.sub(r'^[\W_]+', '', text).strip()
+                
+                phone = "N/A"
+                phone_btn = self.page.locator("button[data-item-id^='phone']")
+                if await phone_btn.count() > 0:
+                     aria = await phone_btn.get_attribute("aria-label")
+                     if aria:
+                         phone = aria.replace("Phone: ", "").strip()
+                     else:
+                         text = await extract_text(phone_btn)
+                         if text != "N/A":
+                             import re
+                             phone = re.sub(r'^[\W_]+', '', text).strip()
+
+                website = "N/A"
+                website_locator = self.page.locator("a[data-item-id='authority']")
+                if await website_locator.count() > 0:
+                     website = await website_locator.get_attribute("href") or "N/A"
+                
+                lead = Lead(
+                    name=name,
+                    address=address,
+                    website=website,
+                    phone=phone,
+                    keyword=keyword
+                )
+                leads.append(lead)
+                self.logger.info(f"Extracted Direct Hit: {name}")
+                return leads
+
+            except Exception as e:
+                self.logger.error(f"Error extracting direct hit: {e}")
+                return []
+
+        # Normal List Extraction logic
         card_selector = "div[role='feed'] > div > div[role='article']"
         cards = self.page.locator(card_selector)
         count = await cards.count()
