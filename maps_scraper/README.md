@@ -52,3 +52,15 @@ Keywords are stored in `keyword.json`. Each entry supports:
 - **"Browser not started"**: Ensure you call the start endpoint/button.
 - **Stuck Scrolling**: The scraper performs up to 3 aggressive retry attempts if no new items load.
 - **Playwright Errors**: Ensure chromium is installed (`playwright install chromium`).
+
+
+---
+title: Maps Scrapping
+emoji: 📍
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
+
+Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
