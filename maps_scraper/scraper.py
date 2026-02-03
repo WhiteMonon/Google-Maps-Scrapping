@@ -99,6 +99,22 @@ class GoogleMapsScraper:
             try:
                 await self.page.screenshot(path="debug_feed_timeout.png")
                 self.logger.info("Saved debug screenshot to debug_feed_timeout.png")
+                
+                # Log page context
+                url = self.page.url
+                try:
+                    title = await self.page.title()
+                except:
+                    title = "Unknown"
+                
+                try:
+                    # Get first 200 chars of body text to see if it's a login/consent page
+                    body_text = await self.page.evaluate("document.body.innerText.substring(0, 200).replace(/\\n/g, ' ')")
+                except:
+                    body_text = "Could not retrieve body"
+                    
+                self.logger.info(f"debug_info: URL={url}, Title={title}, BodyStart={body_text}")
+                
             except:
                 pass
             self.logger.warning(f"Results feed not found immediately for '{keyword}'. It might be a direct hit or no results. Error: {e}")

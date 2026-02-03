@@ -9,6 +9,7 @@ import logging
 import json
 from typing import List, Dict, Optional
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, BackgroundTasks, HTTPException
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from scraper import GoogleMapsScraper
 from schemas import KeywordConfig, KeywordProgress, ScrapeStatusV2
@@ -162,8 +163,15 @@ def read_keywords():
     keywords = get_keywords()
     return {"keywords": [k.model_dump() for k in keywords]}
 
+@app.get("/api/debug/screenshot")
+async def get_debug_screenshot():
+    file_path = "debug_feed_timeout.png"
+    if os.path.exists(file_path):
+        return FileResponse(file_path)
+    raise HTTPException(status_code=404, detail="Screenshot not found")
+
 @app.post("/api/keywords")
-def update_keywords_endpoint(keywords: List[KeywordConfig]):
+async def update_keywords(new_keywords: List[KeywordConfig]):
     """Update keywords list."""
     save_keywords(keywords)
     return {"status": "updated", "count": len(keywords)}
