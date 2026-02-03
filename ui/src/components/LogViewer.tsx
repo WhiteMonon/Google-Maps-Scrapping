@@ -10,9 +10,8 @@ export const LogViewer: React.FC = () => {
         let retryTimeout: ReturnType<typeof setTimeout>;
 
         const connect = () => {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const host = window.location.hostname;
-            ws = new WebSocket(`${protocol}//${host}:8001/ws/logs`);
+            // Connect to production WebSocket
+            ws = new WebSocket('wss://google-maps-scrapping.onrender.com/ws/logs');
 
             ws.onopen = () => {
                 console.log('Connected to logs WebSocket');

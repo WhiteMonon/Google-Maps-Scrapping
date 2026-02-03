@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = `http://${window.location.hostname}:8001/api`;
+const API_URL = 'https://google-maps-scrapping.onrender.com/api';
 
 export interface Lead {
     name: string;
