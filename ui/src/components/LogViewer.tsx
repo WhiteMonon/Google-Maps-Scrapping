@@ -11,9 +11,21 @@ export const LogViewer: React.FC = () => {
 
         const connect = () => {
             // Determine WebSocket URL dynamically
-            const baseUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:7860`;
-            const wsProtocol = baseUrl.startsWith('https') ? 'wss' : 'ws';
-            const wsHost = baseUrl.replace(/^https?:\/\//, '');
+            let baseUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:7860`;
+
+            // Normalize URL to have protocol
+            if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+                const protocol = baseUrl.includes('localhost') ? 'http' : 'https';
+                baseUrl = `${protocol}://${baseUrl}`;
+            }
+
+            // Determine correct WS protocol
+            // If page is loaded over HTTPS, we MUST use WSS to avoid Mixed Content errors
+            const isSecureContext = window.location.protocol === 'https:';
+            const wsProtocol = isSecureContext || baseUrl.startsWith('https') ? 'wss' : 'ws';
+
+            // Clean host
+            const wsHost = baseUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
             ws = new WebSocket(`${wsProtocol}://${wsHost}/ws/logs`);
 
             ws.onopen = () => {

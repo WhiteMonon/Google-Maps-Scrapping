@@ -1,7 +1,18 @@
 import axios from 'axios';
 
-// Use environment variable if set, otherwise default to local backend
-const BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:7860`;
+// Helper to ensure URL has protocol
+const getBaseUrl = () => {
+    let url = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:7860`;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        // If no protocol, assume https unless localhost
+        const protocol = url.includes('localhost') ? 'http' : 'https';
+        url = `${protocol}://${url}`;
+    }
+    // Remove trailing slash if present
+    return url.replace(/\/$/, '');
+};
+
+const BASE_URL = getBaseUrl();
 const API_URL = `${BASE_URL}/api`;
 
 export interface Lead {
