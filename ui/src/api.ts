@@ -15,6 +15,18 @@ const getBaseUrl = () => {
 const BASE_URL = getBaseUrl();
 const API_URL = `${BASE_URL}/api`;
 
+const axiosInstance = axios.create({
+    baseURL: API_URL
+});
+
+axiosInstance.interceptors.request.use((config) => {
+    const token = import.meta.env.VITE_HF_TOKEN;
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
 export interface Lead {
     name: string;
     address: string;
@@ -45,31 +57,31 @@ export interface ScrapeStatus {
 
 export const api = {
     getKeywords: async (): Promise<KeywordConfig[]> => {
-        const response = await axios.get(`${API_URL}/keywords`);
+        const response = await axiosInstance.get('/keywords');
         return response.data.keywords || [];
     },
     updateKeywords: async (keywords: KeywordConfig[]): Promise<void> => {
-        await axios.post(`${API_URL}/keywords`, keywords);
+        await axiosInstance.post('/keywords', keywords);
     },
     startScraping: async (keywords?: KeywordConfig[]): Promise<void> => {
         if (keywords) {
-            await axios.post(`${API_URL}/start`, keywords);
+            await axiosInstance.post('/start', keywords);
         } else {
-            await axios.post(`${API_URL}/start`);
+            await axiosInstance.post('/start');
         }
     },
     stopScraping: async (): Promise<void> => {
-        await axios.post(`${API_URL}/stop`);
+        await axiosInstance.post('/stop');
     },
     getStatus: async (): Promise<ScrapeStatus> => {
-        const response = await axios.get(`${API_URL}/status`);
+        const response = await axiosInstance.get('/status');
         return response.data;
     },
     getResults: async (): Promise<Lead[]> => {
-        const response = await axios.get(`${API_URL}/results`);
+        const response = await axiosInstance.get('/results');
         return response.data;
     },
     retryKeyword: async (keyword: string): Promise<void> => {
-        await axios.post(`${API_URL}/retry/${encodeURIComponent(keyword)}`);
+        await axiosInstance.post(`/retry/${encodeURIComponent(keyword)}`);
     }
 };
