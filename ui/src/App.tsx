@@ -1,14 +1,23 @@
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from './AuthContext';
 import { KeywordManager } from './components/KeywordManager';
 import { ControlPanel } from './components/ControlPanel';
 import { LogViewer } from './components/LogViewer';
 import { ResultsTable } from './components/ResultsTable';
 import { KeywordProgress } from './components/KeywordProgress';
-import { MapPin } from 'lucide-react';
+import { MapPin, LogOut } from 'lucide-react';
 import { api, type ScrapeStatus } from './api';
 
 function App() {
   const [status, setStatus] = useState<ScrapeStatus>({ is_running: false, keywords: [], total_leads: 0 });
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const handleStatusChange = useCallback((newStatus: ScrapeStatus) => {
     setStatus(newStatus);
@@ -26,16 +35,25 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 text-gray-900 font-sans selection:bg-indigo-100 pb-12">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center gap-3">
-          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2.5 rounded-xl text-white shadow-lg shadow-indigo-200/50">
-            <MapPin size={20} />
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2.5 rounded-xl text-white shadow-lg shadow-indigo-200/50">
+              <MapPin size={20} />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+                G-Maps Scraper
+              </h1>
+              <p className="text-xs text-gray-500 -mt-0.5">Dashboard</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-              G-Maps Scraper
-            </h1>
-            <p className="text-xs text-gray-500 -mt-0.5">Dashboard</p>
-          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-red-600 bg-gray-50 hover:bg-red-50 rounded-lg border border-gray-200 hover:border-red-200 transition-all duration-200"
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
         </div>
       </header>
 
