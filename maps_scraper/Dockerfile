@@ -19,7 +19,7 @@ RUN playwright install chromium
 COPY . .
 
 # Expose the port the app runs on
-EXPOSE 8001
+EXPOSE 7860
 
 # Command to run the application
 # We use python main.py because the main.py invokes uvicorn in a way that handles the asyncio loop policy for Playwright compatibility

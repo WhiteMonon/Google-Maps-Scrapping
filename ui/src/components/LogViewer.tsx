@@ -11,7 +11,7 @@ export const LogViewer: React.FC = () => {
 
         const connect = () => {
             // Determine WebSocket URL dynamically
-            const baseUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8001`;
+            const baseUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:7860`;
             const wsProtocol = baseUrl.startsWith('https') ? 'wss' : 'ws';
             const wsHost = baseUrl.replace(/^https?:\/\//, '');
             ws = new WebSocket(`${wsProtocol}://${wsHost}/ws/logs`);

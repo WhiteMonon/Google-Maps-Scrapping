@@ -265,4 +265,4 @@ if __name__ == "__main__":
     # Enforce loop policy again just to be safe
     if sys.platform == 'win32':
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=False)
+    uvicorn.run("main:app", host="0.0.0.0", port=7860, reload=False)

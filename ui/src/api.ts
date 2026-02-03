@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Use environment variable if set, otherwise default to local backend
-const BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8001`;
+const BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:7860`;
 const API_URL = `${BASE_URL}/api`;
 
 export interface Lead {
