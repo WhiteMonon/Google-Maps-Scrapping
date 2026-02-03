@@ -1,3 +1,4 @@
+import React from 'react';
 import { type KeywordProgress as KeywordProgressType } from '../api';
 import { RefreshCw, Check, X, Clock, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
@@ -14,7 +15,7 @@ export const KeywordProgress = ({ keywords, onRetry, isRunning }: Props) => {
     }
 
     const getStatusConfig = (status: string) => {
-        const configs: Record<string, { icon: JSX.Element; badge: string; bar: string }> = {
+        const configs: Record<string, { icon: React.ReactNode; badge: string; bar: string }> = {
             pending: {
                 icon: <Clock size={14} className="text-gray-400" />,
                 badge: 'bg-gray-100 text-gray-600 border-gray-200',
