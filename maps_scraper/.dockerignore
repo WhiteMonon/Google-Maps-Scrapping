@@ -1,0 +1,7 @@
+__pycache__
+venv
+.env
+*.pyc
+.git
+.gitignore
+leads.csv
