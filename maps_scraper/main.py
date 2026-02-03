@@ -173,8 +173,8 @@ async def get_debug_screenshot():
 @app.post("/api/keywords")
 async def update_keywords(new_keywords: List[KeywordConfig]):
     """Update keywords list."""
-    save_keywords(keywords)
-    return {"status": "updated", "count": len(keywords)}
+    save_keywords(new_keywords)
+    return {"status": "updated", "count": len(new_keywords)}
 
 @app.post("/api/start")
 async def start_scraping(keywords: List[KeywordConfig] = None):
